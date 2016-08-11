@@ -5,10 +5,13 @@
 # See documentation in:
 # http://doc.scrapy.org/en/latest/topics/items.html
 
-import scrapy
+from scrapy import Item, Field
 
 
-class TuangoCrawlerItem(scrapy.Item):
+class DinnerItem(Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    name = Field()
+    price = Field()
+    location = Field()
+    popular = Field()
+    rate = Field()
