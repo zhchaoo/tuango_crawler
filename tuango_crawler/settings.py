@@ -57,7 +57,7 @@ ROBOTSTXT_OBEY = False
 #}
 DOWNLOADER_MIDDLEWARES = {
     'scrapy.contrib.downloadermiddleware.useragent.UserAgentMiddleware' : None,
-    'tuango_crawler.rotate_useragent.RotateUserAgentMiddleware' :400
+    'tuango_crawler.middlewares.rotate_useragent.RotateUserAgentMiddleware' :400
 }
 
 # Enable or disable extensions
