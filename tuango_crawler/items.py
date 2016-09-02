@@ -11,7 +11,11 @@ from scrapy import Item, Field
 class DinnerItem(Item):
     # define the fields for your item here like:
     name = Field()
+    url = Field()
+    pic_url = Field()
     price = Field()
-    location = Field()
+    rank = Field()
     popular = Field()
-    rate = Field()
+    address = Field()
+    zone = Field()
+    tag = Field()

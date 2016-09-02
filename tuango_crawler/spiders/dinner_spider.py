@@ -3,40 +3,31 @@ from tuango_crawler.items import DinnerItem
 
 from scrapy import Spider, Request
 
+
 class DinnerSpider(Spider):
     name = "dinner"
-    allowed_domains = ["dmoz.org"]
     start_urls = [
         "http://www.dianping.com/search/category/4/10",
     ]
 
-    def __init__(self, source=None, database_dir="../repo/databases/", *args, **kwargs):
+    def __init__(self, database_dir="./data", *args, **kwargs):
         super(DinnerSpider, self).__init__(*args, **kwargs)
-        #self.allowed_domains = settings.ALLOWED_DOMAINS[source]
-        #self.start_urls = settings.START_URLS[source]
-        settings.MARKET_NAME = source
-        settings.DATABASE_DIR = database_dir
+        self.database_dir = database_dir
 
     def parse(self, response):
-        for href in response.css("section[id^='cat-list-section'] div.cat-item a::attr('href')"):
-            url = response.urljoin(href.extract())
-            yield Request(url, callback=self.parse_dir_contents)
+        next_ref_url = response.xpath("//div[@class='page']/a[@class='next']/@href").extract_first()
+        if next_ref_url:
+            yield Request(response.urljoin(next_ref_url), callback=self.parse)
 
-    def parse_dir_contents(self, response):
-        for sel in response.xpath('//ul/li'):
+        for item_data in response.css('.shop-wrap .shop-list>ul>li'):
             item = DinnerItem()
-            item['name'] = sel.xpath('a/text()').extract()
-            item['location'] = sel.xpath('a/@href').extract()
-            item['price'] = sel.xpath('text()').extract()
+            item['name'] = item_data.xpath(".//div[@class='tit']/a[@data-hippo-type='shop']/@title").extract_first()
+            item['url'] = response.urljoin(item_data.xpath("div[@class='pic']/a/@href").extract_first())
+            item['pic_url'] = item_data.xpath("div[@class='pic']/a/img/@data-src").extract_first()
+            item['rank'] = int(item_data.xpath(".//div[@class='comment']/span/@class").re('\d+')[0])
+            item['popular'] = int(item_data.xpath(".//a[@class='review-num']/b/text()").re('\d+')[0])
+            item['price'] = int(item_data.xpath(".//a[@class='mean-price']/b/text()").re('\d+')[0])
+            item['tag'] = item_data.xpath(".//div[@class='tag-addr']//span[@class='tag']/text()").extract()[0]
+            item['zone'] = item_data.xpath(".//div[@class='tag-addr']//span[@class='tag']/text()").extract()[1]
+            item['address'] = item_data.xpath(".//div[@class='tag-addr']//span[@class='addr']/text()").extract_first()
             yield item
-
-
-    def parse_articles_follow_next_page(self, response):
-        for article in response.xpath("//article"):
-            item = DinnerItem()
-            yield item
-
-        next_page = response.css("ul.navigation > li.next-page > a::attr('href')")
-        if next_page:
-            url = response.urljoin(next_page[0].extract())
-            yield Request(url, self.parse_articles_follow_next_page)
